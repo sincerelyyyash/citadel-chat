@@ -8,7 +8,7 @@
         "start": "node .output/server/index.mjs",
         "lint": "biome check --write",
         "check-types": "tsc --noEmit",
-        "postinstall": "patch-package",
+        "postinstall": "patch-package && bun prisma generate",
         "auth:generate": "bunx @better-auth/cli generate --output prisma/schema.prisma -y",
         "auth:migrate": "bun prisma migrate dev",
         "auth:push": "bun prisma db push",
