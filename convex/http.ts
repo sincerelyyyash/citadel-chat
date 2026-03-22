@@ -1,0 +1,39 @@
+import { corsRouter } from "convex-helpers/server/cors"
+import { httpRouter } from "convex/server"
+import { chatGET } from "./chat_http/get.route"
+import { chatPOST } from "./chat_http/post.route"
+import { transcribeAudio } from "./speech_to_text"
+
+const http = httpRouter()
+const cors = corsRouter(http, {
+    allowedOrigins: [
+        "http://localhost:3000",
+        "https://citadel.vercel.app",
+        "https://citadel.sincerelyyyash.com",
+        "https://citadel.chat",
+        "https://www.citadel.chat"
+    ],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    allowCredentials: true
+})
+
+cors.route({
+    path: "/chat",
+    method: "POST",
+    handler: chatPOST
+})
+
+cors.route({
+    path: "/chat",
+    method: "GET",
+    handler: chatGET
+})
+
+// Speech-to-text route
+cors.route({
+    path: "/transcribe",
+    method: "POST",
+    handler: transcribeAudio
+})
+
+export default http
