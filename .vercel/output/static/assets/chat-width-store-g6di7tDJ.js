@@ -1,1 +1,0 @@
-import{g as e,p as h}from"./main-DrPMvSdj.js";const r="chat-width-store",i=e()(h(t=>({chatWidthState:{chatWidth:"normal"},setChatWidth:a=>t({chatWidthState:{chatWidth:a}})}),{name:r,partialize:t=>({chatWidthState:t.chatWidthState})})),c=t=>{switch(t){case"normal":return"max-w-2xl";case"wider":return"max-w-4xl";default:return"max-w-2xl"}};export{c as g,i as u};

@@ -1,1 +1,0 @@
-import{a,j as i}from"./main-DrPMvSdj.js";function r(o){const t=a.c(2),{children:e}=o;let s;return t[0]!==e?(s=i.jsx("div",{className:"mx-auto max-w-4xl space-y-8",children:e}),t[0]=e,t[1]=s):s=t[1],s}export{r as S};
