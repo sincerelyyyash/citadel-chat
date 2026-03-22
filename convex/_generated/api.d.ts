@@ -26,6 +26,7 @@ import type * as lib_identity from "../lib/identity.js";
 import type * as lib_models from "../lib/models.js";
 import type * as lib_resumable_stream_context from "../lib/resumable_stream_context.js";
 import type * as lib_toolkit from "../lib/toolkit.js";
+import type * as lib_tools_exa_search from "../lib/tools/exa_search.js";
 import type * as lib_tools_lore_search from "../lib/tools/lore_search.js";
 import type * as lib_tools_supermemory from "../lib/tools/supermemory.js";
 import type * as messages from "../messages.js";
@@ -48,14 +49,6 @@ import type {
   FunctionReference,
 } from "convex/server";
 
-/**
- * A utility for referencing Convex functions in your app's API.
- *
- * Usage:
- * ```js
- * const myFunctionReference = api.myModule.myFunction;
- * ```
- */
 declare const fullApi: ApiFromModules<{
   aggregates: typeof aggregates;
   "chat_http/characters": typeof chat_http_characters;
@@ -75,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   "lib/models": typeof lib_models;
   "lib/resumable_stream_context": typeof lib_resumable_stream_context;
   "lib/toolkit": typeof lib_toolkit;
+  "lib/tools/exa_search": typeof lib_tools_exa_search;
   "lib/tools/lore_search": typeof lib_tools_lore_search;
   "lib/tools/supermemory": typeof lib_tools_supermemory;
   messages: typeof messages;
@@ -91,14 +85,30 @@ declare const fullApi: ApiFromModules<{
   streams: typeof streams;
   threads: typeof threads;
 }>;
-declare const fullApiWithMounts: typeof fullApi;
 
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
 export declare const api: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "public">
 >;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
 export declare const internal: FilterApi<
-  typeof fullApiWithMounts,
+  typeof fullApi,
   FunctionReference<any, "internal">
 >;
 
@@ -111,6 +121,12 @@ export declare const components: {
         { k1?: any; k2?: any; namespace?: any },
         { count: number; sum: number }
       >;
+      aggregateBetweenBatch: FunctionReference<
+        "query",
+        "internal",
+        { queries: Array<{ k1?: any; k2?: any; namespace?: any }> },
+        Array<{ count: number; sum: number }>
+      >;
       atNegativeOffset: FunctionReference<
         "query",
         "internal",
@@ -122,6 +138,19 @@ export declare const components: {
         "internal",
         { k1?: any; k2?: any; namespace?: any; offset: number },
         { k: any; s: number; v: any }
+      >;
+      atOffsetBatch: FunctionReference<
+        "query",
+        "internal",
+        {
+          queries: Array<{
+            k1?: any;
+            k2?: any;
+            namespace?: any;
+            offset: number;
+          }>;
+        },
+        Array<{ k: any; s: number; v: any }>
       >;
       get: FunctionReference<
         "query",
@@ -180,6 +209,30 @@ export declare const components: {
         { namespace?: any; node?: string },
         null
       >;
+      listTreeNodes: FunctionReference<
+        "query",
+        "internal",
+        { take?: number },
+        Array<{
+          _creationTime: number;
+          _id: string;
+          aggregate?: { count: number; sum: number };
+          items: Array<{ k: any; s: number; v: any }>;
+          subtrees: Array<string>;
+        }>
+      >;
+      listTrees: FunctionReference<
+        "query",
+        "internal",
+        { take?: number },
+        Array<{
+          _creationTime: number;
+          _id: string;
+          maxNodeSize: number;
+          namespace?: any;
+          root: string;
+        }>
+      >;
     };
     public: {
       clear: FunctionReference<
@@ -188,17 +241,17 @@ export declare const components: {
         { maxNodeSize?: number; namespace?: any; rootLazy?: boolean },
         null
       >;
-      deleteIfExists: FunctionReference<
-        "mutation",
-        "internal",
-        { key: any; namespace?: any },
-        any
-      >;
       delete_: FunctionReference<
         "mutation",
         "internal",
         { key: any; namespace?: any },
         null
+      >;
+      deleteIfExists: FunctionReference<
+        "mutation",
+        "internal",
+        { key: any; namespace?: any },
+        any
       >;
       init: FunctionReference<
         "mutation",

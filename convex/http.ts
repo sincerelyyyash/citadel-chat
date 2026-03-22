@@ -8,10 +8,8 @@ const http = httpRouter()
 const cors = corsRouter(http, {
     allowedOrigins: [
         "http://localhost:3000",
-        "https://citadel.vercel.app",
         "https://citadel.sincerelyyyash.com",
-        "https://citadel.chat",
-        "https://www.citadel.chat"
+        "https://citadel-chat.vercel.app",
     ],
     allowedHeaders: ["Content-Type", "Authorization"],
     allowCredentials: true
