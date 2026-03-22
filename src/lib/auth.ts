@@ -7,8 +7,8 @@ import { jwt } from "better-auth/plugins/jwt"
 export const auth = betterAuth({
     secret: process.env.BETTER_AUTH_SECRET,
     trustedOrigins: [
-        process.env.VERCEL_URL!,
-        "https://citadel.chat",
+        process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+        "https://citadel-chat.vercel.app",
         "http://localhost:3000",
         "https://localhost:3000"
     ].filter(Boolean),
