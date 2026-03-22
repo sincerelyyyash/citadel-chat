@@ -17,63 +17,40 @@ import {
     DialogTitle
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { api } from "@/convex/_generated/api"
-import type { Id } from "@/convex/_generated/dataModel"
-import { getProjectColorClasses } from "@/lib/project-constants"
-import { cn } from "@/lib/utils"
 import { useNavigate, useParams } from "@tanstack/react-router"
 import { useMutation } from "convex/react"
-import { FolderOpen, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { memo, useEffect, useState } from "react"
 import { toast } from "sonner"
 import type { Thread } from "./types"
-
-interface Project {
-    _id: Id<"projects">
-    name: string
-    color?: string
-    icon?: string
-}
 
 interface ThreadItemDialogsProps {
     // Dialog state
     showDeleteDialog: boolean
     showRenameDialog: boolean
-    showMoveDialog: boolean
 
     // Dialog control
     onCloseDeleteDialog: () => void
     onCloseRenameDialog: () => void
-    onCloseMoveDialog: () => void
 
     // Current thread
     currentThread: Thread | null
-
-    // Projects for move dialog
-    projects: Project[]
 }
 
 export const ThreadItemDialogs = memo(
     ({
         showDeleteDialog,
         showRenameDialog,
-        showMoveDialog,
         onCloseDeleteDialog,
         onCloseRenameDialog,
-        onCloseMoveDialog,
-        currentThread,
-        projects
+        currentThread
     }: ThreadItemDialogsProps) => {
         const [renameValue, setRenameValue] = useState("")
         const [isRenaming, setIsRenaming] = useState(false)
-        const [isMoving, setIsMoving] = useState(false)
-        const [selectedProjectId, setSelectedProjectId] = useState<string>("no-folder")
 
         const deleteThreadMutation = useMutation(api.threads.deleteThread)
         const renameThreadMutation = useMutation(api.threads.renameThread)
-        const moveThreadMutation = useMutation(api.folders.moveThreadToProject)
 
         const params = useParams({ strict: false }) as { threadId?: string }
         const navigate = useNavigate()
@@ -86,25 +63,12 @@ export const ThreadItemDialogs = memo(
             }
         }, [showRenameDialog])
 
-        useEffect(() => {
-            if (!showMoveDialog) {
-                setIsMoving(false)
-            }
-        }, [showMoveDialog])
-
         // Initialize rename value when dialog opens
         useEffect(() => {
             if (showRenameDialog && currentThread) {
                 setRenameValue(currentThread.title)
             }
         }, [showRenameDialog, currentThread])
-
-        // Initialize selected project when dialog opens
-        useEffect(() => {
-            if (showMoveDialog && currentThread) {
-                setSelectedProjectId(currentThread.projectId || "no-folder")
-            }
-        }, [showMoveDialog, currentThread])
 
         const handleDelete = async () => {
             if (!currentThread) return
@@ -160,46 +124,6 @@ export const ThreadItemDialogs = memo(
             }
         }
 
-        const handleMove = async () => {
-            if (!currentThread) return
-
-            const newProjectId =
-                selectedProjectId === "no-folder"
-                    ? undefined
-                    : (selectedProjectId as Id<"projects">)
-
-            // Don't move if it's already in the same location
-            if ((currentThread.projectId || "no-folder") === selectedProjectId) {
-                onCloseMoveDialog()
-                return
-            }
-
-            setIsMoving(true)
-            try {
-                const result = await moveThreadMutation({
-                    threadId: currentThread._id,
-                    projectId: newProjectId
-                })
-
-                if (result && "error" in result) {
-                    toast.error(
-                        typeof result.error === "string" ? result.error : "Failed to move thread"
-                    )
-                } else {
-                    const targetName = newProjectId
-                        ? projects.find((p) => p._id === newProjectId)?.name || "folder"
-                        : "General"
-                    toast.success(`Thread moved to ${targetName}`)
-                    onCloseMoveDialog()
-                }
-            } catch (error) {
-                console.error("Failed to move thread:", error)
-                toast.error("Failed to move thread")
-            } finally {
-                setIsMoving(false)
-            }
-        }
-
         return (
             <>
                 {/* Rename Dialog */}
@@ -250,100 +174,6 @@ export const ThreadItemDialogs = memo(
                                     </>
                                 ) : (
                                     "Rename"
-                                )}
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
-
-                {/* Move to Folder Dialog */}
-                <Dialog
-                    open={showMoveDialog}
-                    onOpenChange={(open) => {
-                        if (!isMoving && !open) {
-                            onCloseMoveDialog()
-                        }
-                    }}
-                >
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Move to Folder</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                            <RadioGroup
-                                value={selectedProjectId}
-                                onValueChange={setSelectedProjectId}
-                                disabled={isMoving}
-                            >
-                                {/* No folder option */}
-                                <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="no-folder" id="no-folder" />
-                                    <Label
-                                        htmlFor="no-folder"
-                                        className="flex cursor-pointer items-center gap-2"
-                                    >
-                                        <span>No Folder</span>
-                                    </Label>
-                                </div>
-
-                                {/* Folder options */}
-                                {projects.map((project) => {
-                                    const colorClasses = getProjectColorClasses(
-                                        project.color as any
-                                    )
-                                    return (
-                                        <div
-                                            key={project._id}
-                                            className="flex items-center space-x-2"
-                                        >
-                                            <RadioGroupItem value={project._id} id={project._id} />
-                                            <Label
-                                                htmlFor={project._id}
-                                                className="flex cursor-pointer items-center gap-1"
-                                            >
-                                                <div
-                                                    className={cn(
-                                                        "mt-1 flex size-5 self-baseline",
-                                                        colorClasses,
-                                                        "bg-transparent dark:bg-transparent"
-                                                    )}
-                                                >
-                                                    <FolderOpen
-                                                        className="size-4"
-                                                        fill="currentColor"
-                                                        strokeWidth={1}
-                                                        stroke="var(--foreground)"
-                                                    />
-                                                </div>
-                                                <span>{project.name}</span>
-                                            </Label>
-                                        </div>
-                                    )
-                                })}
-                            </RadioGroup>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                variant="outline"
-                                onClick={onCloseMoveDialog}
-                                disabled={isMoving}
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                onClick={handleMove}
-                                disabled={
-                                    isMoving ||
-                                    selectedProjectId === (currentThread?.projectId || "no-folder")
-                                }
-                            >
-                                {isMoving ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                        Moving...
-                                    </>
-                                ) : (
-                                    "Move"
                                 )}
                             </Button>
                         </DialogFooter>

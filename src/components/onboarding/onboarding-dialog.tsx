@@ -1,5 +1,5 @@
 "use client"
-import { Logo } from "@/components/logo"
+import { HouseBrandMark } from "@/components/house-brand-mark"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
@@ -8,17 +8,9 @@ import {
     ArrowLeft,
     ArrowRight,
     Bot,
-    Box,
-    Command,
-    Edit,
-    FileUp,
-    Folder,
     Key,
-    Mic,
-    Play,
     Search,
     Sparkles,
-    Wand2,
     Zap
 } from "lucide-react"
 import { AnimatePresence, MotionConfig, motion } from "motion/react"
@@ -43,9 +35,11 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
         icon: Sparkles,
         content: (
             <div className="flex flex-col items-center space-y-4 text-center">
-                <div className="mx-auto h-24 w-24 rounded-full border-2 border-primary/20">
-                    <Logo />
-                </div>
+                <HouseBrandMark
+                    className="mx-auto"
+                    iconClassName="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-primary/20 bg-muted/30"
+                    sizePreset="sidebar"
+                />
                 <div className="text-center">
                     <h3 className="font-bold text-2xl text-foreground">Welcome to Citadel</h3>
                     <span className="text-muted-foreground text-sm">
@@ -57,20 +51,20 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     },
     {
         id: "models",
-        title: "Powered by Kimi K2.5",
+        title: "Character-first conversations",
         icon: Key,
         content: (
             <div className="space-y-6">
-                <Card className="p-4 shadow-none">
+                <Card className="border-border/60 bg-muted/25 p-4 shadow-none backdrop-blur-sm">
                     <div className="flex items-start gap-3">
                         <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
                             <Bot className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                            <h4 className="font-semibold text-sm">Kimi K2.5 by Moonshot AI</h4>
+                            <h4 className="font-semibold text-sm">Thoughtful, immersive replies</h4>
                             <p className="mt-0.5 text-muted-foreground text-xs">
-                                A powerful multimodal model with 256K context, vision, and
-                                tool-calling — perfect for deep lore discussions.
+                                Built for rich lore discussions, long-form answers, and seamless
+                                character-driven chats inside Citadel.
                             </p>
                         </div>
                     </div>
@@ -91,7 +85,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
         icon: Search,
         content: (
             <div className="space-y-6">
-                <Card className="p-4 shadow-none">
+                <Card className="border-border/60 bg-muted/25 p-4 shadow-none backdrop-blur-sm">
                     <div className="flex items-start space-x-3">
                         <Search className="mt-0.5 h-5 w-5 text-primary" />
                         <div className="space-y-2">
@@ -126,7 +120,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
         content: (
             <div className="space-y-6">
                 <div className="grid grid-cols-1 gap-2">
-                    <Card className="p-4 shadow-none">
+                    <Card className="border-border/60 bg-muted/25 p-4 shadow-none backdrop-blur-sm">
                         <div className="flex items-start space-x-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                                 <Bot className="h-5 w-5 text-primary" />
@@ -151,54 +145,17 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
         )
     },
     {
-        id: "features",
-        title: "More Amazing Features",
-        icon: Wand2,
-        content: (
-            <div className="space-y-6">
-                <div className="flex flex-wrap gap-1.5">
-                    {[
-                        { icon: Folder, label: "Chat folders" },
-                        { icon: Command, label: "Keyboard shortcuts" },
-                        { icon: Play, label: "Resumable streams" },
-                        { icon: Edit, label: "Edit/Regenerate messages" },
-                        { icon: FileUp, label: "Upload image/text/PDF files" },
-                        { icon: Box, label: "HTML/Mermaid rendering" },
-                        { icon: Mic, label: "Voice input" }
-                    ].map(({ icon: Icon, label }) => (
-                        <div
-                            key={label}
-                            className="flex items-center space-x-2 rounded-lg border border-border/50 bg-muted/10 px-3 py-2"
-                        >
-                            <Icon className="h-4 w-4 text-primary" />
-                            <span className="font-medium text-sm">{label}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="space-y-3">
-                    <h3 className="font-semibold text-xl tracking-tight">Feature packed</h3>
-                    <p className="text-muted-foreground text-sm leading-relaxed">
-                        A wide set of tools for deep lore analysis, theory crafting, and world
-                        exploration.
-                    </p>
-                </div>
-            </div>
-        )
-    },
-    {
         id: "ready",
         title: "Ready to Get Started?",
         icon: Sparkles,
         content: (
             <div className="flex w-full flex-col items-start space-y-4 text-left">
-                <Sparkles className="size-10 text-primary" />
                 <div className="w-full space-y-1">
                     <h3 className="font-bold text-2xl text-foreground tracking-tight">
                         You're all set!
                     </h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">
-                        Start chatting with AI and make Citadel truly yours! Don't forget to
-                        checkout the Settings page to customize your experience.
+                        Start chatting with AI and make Citadel truly yours!
                     </p>
                 </div>
             </div>
@@ -237,7 +194,7 @@ export function OnboardingDialog({ isOpen, onComplete }: OnboardingDialogProps) 
                         bounce: 0.1
                     }}
                 >
-                    <Card className="inset-shadow-sm w-full max-w-none overflow-hidden border-2 bg-card pt-3 pb-5">
+                    <Card className="inset-shadow-sm w-full max-w-none overflow-hidden border border-border/70 bg-background/95 pt-3 pb-5 shadow-2xl backdrop-blur-md">
                         <div className="relative overflow-hidden">
                             <AnimatePresence mode="wait">
                                 <motion.div
@@ -255,7 +212,7 @@ export function OnboardingDialog({ isOpen, onComplete }: OnboardingDialogProps) 
                             </AnimatePresence>
                         </div>
 
-                        <CardFooter className="relative flex items-center justify-between border-t-2 px-4 pt-4 sm:px-6">
+                        <CardFooter className="relative flex items-center justify-between border-border/60 border-t bg-muted/10 px-4 pt-4 sm:px-6">
                             {currentStep > 0 ? (
                                 <Button
                                     variant="secondary"
@@ -294,7 +251,6 @@ export function OnboardingDialog({ isOpen, onComplete }: OnboardingDialogProps) 
                                     <>
                                         <span className="hidden sm:inline">Get Started</span>
                                         <span className="sm:hidden">Start</span>
-                                        <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
                                     </>
                                 ) : (
                                     <>

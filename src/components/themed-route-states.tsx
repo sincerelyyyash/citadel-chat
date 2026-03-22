@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card"
 import type { ErrorComponentProps } from "@tanstack/react-router"
 import { Link } from "@tanstack/react-router"
-import { BookOpen, Home, RefreshCw } from "lucide-react"
+import { Home, RefreshCw } from "lucide-react"
 
 export const ThemedGlobalNotFound = () => {
     return (
@@ -38,12 +38,6 @@ export const ThemedGlobalNotFound = () => {
                         <Link to="/" aria-label="Return to home">
                             <Home className="size-4 shrink-0" aria-hidden />
                             Return home
-                        </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full sm:w-auto">
-                        <Link to="/library" aria-label="Open chat library">
-                            <BookOpen className="size-4 shrink-0" aria-hidden />
-                            Library
                         </Link>
                     </Button>
                 </CardFooter>
@@ -136,12 +130,6 @@ export const ThemedChatRouteError = ({ error, reset, isNotFound }: ThemedChatRou
                 </CardHeader>
                 <CardFooter className="flex flex-col gap-2 border-border/60 border-t pt-6 sm:flex-row sm:justify-center">
                     <Button asChild className="w-full sm:w-auto">
-                        <Link to="/library" aria-label="Open your chat library">
-                            <BookOpen className="size-4 shrink-0" aria-hidden />
-                            Open library
-                        </Link>
-                    </Button>
-                    <Button asChild variant="outline" className="w-full sm:w-auto">
                         <Link to="/" aria-label="Return to home">
                             <Home className="size-4 shrink-0" aria-hidden />
                             Home
@@ -190,9 +178,9 @@ export const ThemedChatRouteError = ({ error, reset, isNotFound }: ThemedChatRou
                     Try again
                 </Button>
                 <Button asChild variant="outline" className="w-full sm:w-auto">
-                    <Link to="/library" aria-label="Open your chat library">
-                        <BookOpen className="size-4 shrink-0" aria-hidden />
-                        Library
+                    <Link to="/" aria-label="Return to home">
+                        <Home className="size-4 shrink-0" aria-hidden />
+                        Home
                     </Link>
                 </Button>
             </CardFooter>

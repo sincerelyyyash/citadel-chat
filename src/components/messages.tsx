@@ -476,9 +476,6 @@ export function Messages({
                                     )}
                                 </div>
 
-                                {message.role === "user" ? (
-                                    <CharacterMessageAvatar characterId={displayCharacterId} />
-                                ) : null}
                             </div>
                         )
                     })}

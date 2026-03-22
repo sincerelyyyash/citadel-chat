@@ -52,8 +52,7 @@ const CharacterItem = memo(function CharacterItem({
                 </span>
                 <span className="truncate text-muted-foreground text-xs">{character.title}</span>
             </div>
-            <div className="flex shrink-0 items-center gap-2">
-                <span className="text-muted-foreground text-xs">{character.house}</span>
+            <div className="flex shrink-0 items-center">
                 {isSelected && (
                     <Sword
                         className="size-3.5 text-primary group-aria-selected:text-foreground"

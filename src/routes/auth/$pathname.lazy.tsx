@@ -21,7 +21,7 @@ function RouteComponent() {
             >
                 <div className="px-8 pb-6">
                     <p className="text-center text-muted-foreground text-sm leading-relaxed">
-                        The maesters are studying in the library. Meanwhile, review our{" "}
+                        The maesters are hard at work. Meanwhile, review our{" "}
                         <Link to="/privacy-policy" className="underline hover:text-primary">
                             privacy policy
                         </Link>{" "}

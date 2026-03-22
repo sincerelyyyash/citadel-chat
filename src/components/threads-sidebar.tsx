@@ -16,17 +16,15 @@ import { useFunction } from "@/hooks/use-function"
 import { useInfiniteScroll } from "@/hooks/use-infinite-scroll"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { authClient } from "@/lib/auth-client"
-import { useDiskCachedPaginatedQuery, useDiskCachedQuery } from "@/lib/convex-cached-query"
+import { useDiskCachedPaginatedQuery } from "@/lib/convex-cached-query"
 import { cn } from "@/lib/utils"
 import { Link } from "@tanstack/react-router"
 import { useNavigate } from "@tanstack/react-router"
 import { useConvexAuth } from "convex/react"
 import { isAfter, isToday, isYesterday, subDays } from "date-fns"
-import { Image, Loader2, Pin, Search } from "lucide-react"
+import { Loader2, Pin, Search } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { HouseBrandMark } from "./house-brand-mark"
-import { FolderItem } from "./threads/folder-item"
-import { NewFolderButton } from "./threads/new-folder-button"
 import { ThreadItem } from "./threads/thread-item"
 import { ThreadItemDialogs } from "./threads/thread-item-dialogs"
 import type { Thread } from "./threads/types"
@@ -74,14 +72,12 @@ function ThreadsGroup({
     threads,
     icon,
     onOpenRenameDialog,
-    onOpenMoveDialog,
     onOpenDeleteDialog
 }: {
     title: string
     threads: Thread[]
     icon?: React.ReactNode
     onOpenRenameDialog?: (thread: Thread) => void
-    onOpenMoveDialog?: (thread: Thread) => void
     onOpenDeleteDialog?: (thread: Thread) => void
 }) {
     if (threads.length === 0) return null
@@ -99,7 +95,6 @@ function ThreadsGroup({
                             key={thread._id}
                             thread={thread}
                             onOpenRenameDialog={onOpenRenameDialog}
-                            onOpenMoveDialog={onOpenMoveDialog}
                             onOpenDeleteDialog={onOpenDeleteDialog}
                         />
                     ))}
@@ -130,7 +125,6 @@ export function ThreadsSidebar() {
     // Dialog state
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [showRenameDialog, setShowRenameDialog] = useState(false)
-    const [showMoveDialog, setShowMoveDialog] = useState(false)
     const [currentThread, setCurrentThread] = useState<Thread | null>(null)
 
     const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -161,17 +155,6 @@ export function ThreadsSidebar() {
         }
     )
 
-    // Get projects
-    const projects = useDiskCachedQuery(
-        api.folders.getUserProjects,
-        {
-            key: "projects",
-            default: [],
-            forceCache: true
-        },
-        session?.user?.id && !auth.isLoading ? {} : "skip"
-    )
-
     const isLoading = false
 
     const sentinelRef = useInfiniteScroll({
@@ -195,11 +178,6 @@ export function ThreadsSidebar() {
         setShowRenameDialog(true)
     })
 
-    const handleOpenMoveDialog = useFunction((thread: Thread) => {
-        setCurrentThread(thread)
-        setShowMoveDialog(true)
-    })
-
     const handleOpenDeleteDialog = useFunction((thread: Thread) => {
         setCurrentThread(thread)
         setShowDeleteDialog(true)
@@ -209,16 +187,7 @@ export function ThreadsSidebar() {
         setShowRenameDialog(false)
         // Keep currentThread until animation completes
         setTimeout(() => {
-            if (!showRenameDialog && !showMoveDialog && !showDeleteDialog) {
-                setCurrentThread(null)
-            }
-        }, 150)
-    })
-
-    const handleCloseMoveDialog = useFunction(() => {
-        setShowMoveDialog(false)
-        setTimeout(() => {
-            if (!showRenameDialog && !showMoveDialog && !showDeleteDialog) {
+            if (!showRenameDialog && !showDeleteDialog) {
                 setCurrentThread(null)
             }
         }, 150)
@@ -227,7 +196,7 @@ export function ThreadsSidebar() {
     const handleCloseDeleteDialog = useFunction(() => {
         setShowDeleteDialog(false)
         setTimeout(() => {
-            if (!showRenameDialog && !showMoveDialog && !showDeleteDialog) {
+            if (!showRenameDialog && !showDeleteDialog) {
                 setCurrentThread(null)
             }
         }, 150)
@@ -281,94 +250,49 @@ export function ThreadsSidebar() {
             return <LoadingSkeleton />
         }
 
-        if (hasError || "error" in projects) {
+        if (hasError) {
             return <></>
         }
 
-        const hasProjects = projects.length > 0
         const hasNonProjectThreads = allThreads.length > 0
 
-        if (!hasProjects && !hasNonProjectThreads) {
+        if (!hasNonProjectThreads) {
             return <EmptyState message="No threads found" />
         }
 
         return (
             <>
-                <div className="px-2">
-                    <Link
-                        to="/library"
-                        className={cn(
-                            buttonVariants({ variant: "ghost" }),
-                            "h-8 w-full justify-start"
-                        )}
-                    >
-                        <Image className="h-4 w-4" />
-                        Library
-                    </Link>
-                </div>
-                {/* Folders Section */}
-                <SidebarGroup>
-                    <SidebarGroupLabel className="pr-0">
-                        Folders
-                        <div className="flex-grow" />
-                        <NewFolderButton onClick={() => setOpenMobile(false)} />
-                    </SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {projects.map((project) => {
-                                return (
-                                    <FolderItem
-                                        key={project._id}
-                                        project={project}
-                                        numThreads={project.threadCount}
-                                    />
-                                )
-                            })}
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
-
-                {/* Non-Project Threads */}
-                {hasNonProjectThreads && (
-                    <>
-                        <ThreadsGroup
-                            title="Pinned"
-                            threads={groupedNonProjectThreads.pinned}
-                            icon={<Pin className="h-4 w-4" />}
-                            onOpenRenameDialog={handleOpenRenameDialog}
-                            onOpenMoveDialog={handleOpenMoveDialog}
-                            onOpenDeleteDialog={handleOpenDeleteDialog}
-                        />
-                        <ThreadsGroup
-                            title="Today"
-                            threads={groupedNonProjectThreads.today}
-                            onOpenRenameDialog={handleOpenRenameDialog}
-                            onOpenMoveDialog={handleOpenMoveDialog}
-                            onOpenDeleteDialog={handleOpenDeleteDialog}
-                        />
-                        <ThreadsGroup
-                            title="Yesterday"
-                            threads={groupedNonProjectThreads.yesterday}
-                            onOpenRenameDialog={handleOpenRenameDialog}
-                            onOpenMoveDialog={handleOpenMoveDialog}
-                            onOpenDeleteDialog={handleOpenDeleteDialog}
-                        />
-                        <ThreadsGroup
-                            title="Last 7 Days"
-                            threads={groupedNonProjectThreads.lastSevenDays}
-                            onOpenRenameDialog={handleOpenRenameDialog}
-                            onOpenMoveDialog={handleOpenMoveDialog}
-                            onOpenDeleteDialog={handleOpenDeleteDialog}
-                        />
-                        <ThreadsGroup
-                            title="Last 30 Days"
-                            threads={groupedNonProjectThreads.lastThirtyDays}
-                            onOpenRenameDialog={handleOpenRenameDialog}
-                            onOpenMoveDialog={handleOpenMoveDialog}
-                            onOpenDeleteDialog={handleOpenDeleteDialog}
-                        />
-                    </>
-                )}
+                <ThreadsGroup
+                    title="Pinned"
+                    threads={groupedNonProjectThreads.pinned}
+                    icon={<Pin className="h-4 w-4" />}
+                    onOpenRenameDialog={handleOpenRenameDialog}
+                    onOpenDeleteDialog={handleOpenDeleteDialog}
+                />
+                <ThreadsGroup
+                    title="Today"
+                    threads={groupedNonProjectThreads.today}
+                    onOpenRenameDialog={handleOpenRenameDialog}
+                    onOpenDeleteDialog={handleOpenDeleteDialog}
+                />
+                <ThreadsGroup
+                    title="Yesterday"
+                    threads={groupedNonProjectThreads.yesterday}
+                    onOpenRenameDialog={handleOpenRenameDialog}
+                    onOpenDeleteDialog={handleOpenDeleteDialog}
+                />
+                <ThreadsGroup
+                    title="Last 7 Days"
+                    threads={groupedNonProjectThreads.lastSevenDays}
+                    onOpenRenameDialog={handleOpenRenameDialog}
+                    onOpenDeleteDialog={handleOpenDeleteDialog}
+                />
+                <ThreadsGroup
+                    title="Last 30 Days"
+                    threads={groupedNonProjectThreads.lastThirtyDays}
+                    onOpenRenameDialog={handleOpenRenameDialog}
+                    onOpenDeleteDialog={handleOpenDeleteDialog}
+                />
 
                 {/* Infinite Scroll Sentinel */}
                 {status === "CanLoadMore" && (
@@ -464,12 +388,9 @@ export function ThreadsSidebar() {
                 <ThreadItemDialogs
                     showDeleteDialog={showDeleteDialog}
                     showRenameDialog={showRenameDialog}
-                    showMoveDialog={showMoveDialog}
                     onCloseDeleteDialog={handleCloseDeleteDialog}
                     onCloseRenameDialog={handleCloseRenameDialog}
-                    onCloseMoveDialog={handleCloseMoveDialog}
                     currentThread={currentThread}
-                    projects={"error" in projects ? [] : projects}
                 />
 
                 <SidebarRail />
