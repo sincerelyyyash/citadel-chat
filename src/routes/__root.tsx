@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/react-query"
 import { createRootRouteWithContext } from "@tanstack/react-router"
 import { HeadContent, Outlet, Scripts } from "@tanstack/react-router"
+import { Analytics } from "@vercel/analytics/react"
 import type { ReactNode } from "react"
 
 import { ThemeScript } from "@/components/theme-script"
@@ -143,6 +144,7 @@ function RootDocument({ children }: Readonly<{ children: ReactNode }>) {
             <body className="h-dvh overflow-hidden">
                 <Providers>{children}</Providers>
 
+                <Analytics />
                 <Scripts />
             </body>
         </html>
