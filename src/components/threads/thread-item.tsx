@@ -56,18 +56,14 @@ export const ThreadItem = memo(
 
         return (
             <SidebarMenuItem className={isInFolder ? "pl-6" : ""}>
-                <div
-                    className={cn(
-                        "group/item flex w-full items-center rounded-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                        isMenuOpen && "bg-sidebar-accent text-sidebar-accent-foreground",
-                        isActive && "bg-sidebar-accent text-sidebar-accent-foreground"
-                    )}
-                >
+                <div className="group/item flex w-full items-center">
                     <SidebarMenuButton
                         asChild
+                        isActive={isActive}
                         className={cn(
-                            "flex-1 hover:bg-transparent hover:text-inherit",
-                            isActive && "text-sidebar-accent-foreground"
+                            "flex-1 bg-transparent text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+                            isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
+                            isMenuOpen && !isActive && "bg-sidebar-accent/45 text-sidebar-foreground"
                         )}
                     >
                         <Link
@@ -82,7 +78,9 @@ export const ThreadItem = memo(
                                     <button
                                         type="button"
                                         className={cn(
-                                            "rounded p-1 text-inherit transition-[opacity,background-color,color] hover:bg-sidebar-accent/80",
+                                            "rounded p-1 text-sidebar-foreground/70 transition-[opacity,color] hover:text-sidebar-accent-foreground",
+                                            isActive && "text-sidebar-accent-foreground/80",
+                                            isMenuOpen && !isActive && "text-sidebar-foreground/85",
                                             isMenuOpen || "opacity-0 group-hover/item:opacity-100"
                                         )}
                                     >
