@@ -61,9 +61,12 @@ export const ThreadItem = memo(
                         asChild
                         isActive={isActive}
                         className={cn(
-                            "flex-1 bg-transparent text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
-                            isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
-                            isMenuOpen && !isActive && "bg-sidebar-accent/45 text-sidebar-foreground"
+                            "flex-1 bg-transparent text-sidebar-foreground/85 transition-colors hover:bg-black/10 hover:text-sidebar-foreground dark:hover:bg-white/10 dark:hover:text-sidebar-foreground",
+                            isActive &&
+                                "bg-black/14 text-sidebar-foreground dark:bg-white/14 dark:text-sidebar-foreground",
+                            isMenuOpen &&
+                                !isActive &&
+                                "bg-black/8 text-sidebar-foreground dark:bg-white/8"
                         )}
                     >
                         <Link
@@ -78,8 +81,8 @@ export const ThreadItem = memo(
                                     <button
                                         type="button"
                                         className={cn(
-                                            "rounded p-1 text-sidebar-foreground/70 transition-[opacity,color] hover:text-sidebar-accent-foreground",
-                                            isActive && "text-sidebar-accent-foreground/80",
+                                            "rounded p-1 text-sidebar-foreground/70 transition-[opacity,color] hover:text-sidebar-foreground",
+                                            isActive && "text-sidebar-foreground/80",
                                             isMenuOpen && !isActive && "text-sidebar-foreground/85",
                                             isMenuOpen || "opacity-0 group-hover/item:opacity-100"
                                         )}
