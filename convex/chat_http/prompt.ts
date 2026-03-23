@@ -36,29 +36,13 @@ export const buildPrompt = (enabledTools: AbilityId[], characterId?: string) => 
 - Block math: Use \\[ \\] or \\( \\) for block LaTeX equations
 
 ## Canvas tool
-You have access to the "Canvas" tool for visualizing content. Two formats are supported:
-1. \`mermaid\`
+You have access to the "Canvas" tool for visualizing content via \`mermaid\`:
 - PURPOSE: Create diagrams, flowcharts, family trees, battle formations, alliance maps, and visual representations
 - USE WHEN: Explaining lineage, political alliances, battle strategy, or upon user request
 - CRITICAL RULES for correct \`mermaid\` rendering:
   - ALWAYS wrap node strings in double quotes e.g. \`A["Start"] --> B["Hello World"]\`
   - ESCAPE special characters in node strings
-- DO NOT apply any styling to the diagram unless explicitly requested
-
-2. \`html\` / \`react\`
-- PURPOSE: Render interactive web content and React components
-- NOTE:
-  - PREFER using \`react\` over \`html\` format unless EXPLICITLY requested
-  - ALL code MUST be in a single block
-  - When updating existing code, ALWAYS include the complete code implementation
-  - For \`html\`: CSS and Javascript is ENABLED
-  - For \`react\`:
-    - MUST export a default React component
-    - TailwindCSS is ENABLED but NO arbitrary classes are allowed
-    - ONLY IF the user asks for charts, the \`recharts\` library is available
-    - If use built-in hooks, MUST import them from \`react\`
-    - NO other external libraries are allowed
-    - For images, DON'T make up urls, USE \`https://www.claudeusercontent.com/api/placeholder/{width}/{height}\``
+- DO NOT apply any styling to the diagram unless explicitly requested`
     ]
 
     layers.push(
