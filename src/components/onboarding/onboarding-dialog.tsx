@@ -4,11 +4,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { HOUSE_THEMES } from "@/lib/theme-utils"
 import {
     ArrowLeft,
     ArrowRight,
     Bot,
     Key,
+    Palette,
     Search,
     Sparkles,
     Zap
@@ -108,6 +110,40 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
                     <p className="text-muted-foreground text-sm leading-relaxed">
                         Book lore search is always available to ground answers in canon. You can
                         optionally turn on web search for Winds of Winter news and fan theories.
+                    </p>
+                </div>
+            </div>
+        )
+    },
+    {
+        id: "themes",
+        title: "The Great Houses",
+        icon: Palette,
+        content: (
+            <div className="space-y-6">
+                <Card className="border-border/60 bg-muted/25 p-4 shadow-none backdrop-blur-sm">
+                    <div className="flex items-start gap-3">
+                        <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                            <Palette className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="space-y-2">
+                            <h4 className="font-semibold text-sm">Pledge your allegiance</h4>
+                            <div className="flex flex-wrap gap-1">
+                                {HOUSE_THEMES.map((theme) => (
+                                    <Badge key={theme.url} variant="secondary" className="text-xs">
+                                        {theme.name.replace("House ", "")}
+                                    </Badge>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+                <div className="space-y-3">
+                    <h3 className="font-semibold text-xl tracking-tight">Make the Citadel Yours</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                        Choose from the great houses of Westeros to reshape the Citadel with each
+                        house&apos;s sigil, words, and character. Change your allegiance anytime
+                        from appearance settings.
                     </p>
                 </div>
             </div>
