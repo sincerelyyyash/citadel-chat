@@ -14,6 +14,7 @@ import {
     useUpdateUser
 } from "@/hooks/auth-hooks"
 import { authClient } from "@/lib/auth-client"
+import { captureEvent, resetAnalytics } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 import { queryClient } from "@/providers"
 import { createFileRoute, useRouter } from "@tanstack/react-router"
@@ -96,7 +97,9 @@ function UserAccountSettings() {
 
     const handleSignOut = useCallback(async () => {
         try {
+            captureEvent("auth_sign_out_started")
             await authClient.signOut()
+            resetAnalytics()
             await queryClient.resetQueries({ queryKey: ["session"] })
             await queryClient.resetQueries({ queryKey: ["token"] })
             const keys = Object.keys(localStorage)

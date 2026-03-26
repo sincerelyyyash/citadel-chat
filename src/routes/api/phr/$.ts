@@ -1,7 +1,7 @@
 import { createServerFileRoute } from "@tanstack/react-start/server"
 
 const POSTHOG_HOST = process.env.VITE_POSTHOG_HOST
-const TELEMETRY_PROXY_DISABLED = true
+const TELEMETRY_PROXY_DISABLED = process.env.POSTHOG_PROXY_DISABLED === "true"
 
 function filterHeaders(headers: Headers): Record<string, string> {
     const filtered: Record<string, string> = {}

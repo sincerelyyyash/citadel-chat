@@ -11,6 +11,7 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { authClient } from "@/lib/auth-client"
+import { captureEvent, resetAnalytics } from "@/lib/analytics"
 import { queryClient } from "@/providers"
 import { GitHubIcon, XIcon } from "@daveyplate/better-auth-ui"
 import { useRouter } from "@tanstack/react-router"
@@ -42,7 +43,9 @@ export function UserButton() {
     }
 
     const handleSignOut = async () => {
+        captureEvent("auth_sign_out_started")
         await authClient.signOut()
+        resetAnalytics()
         await queryClient.resetQueries({ queryKey: ["session"] })
         await queryClient.resetQueries({ queryKey: ["token"] })
         router.navigate({ to: "/" })

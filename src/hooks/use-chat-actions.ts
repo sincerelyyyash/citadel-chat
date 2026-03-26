@@ -1,6 +1,7 @@
 import type { Id } from "@/convex/_generated/dataModel"
 import { type UploadedFile, useChatStore } from "@/lib/chat-store"
 import type { UIMessageWithChatMetadata } from "@/lib/chat-message-metadata"
+import { captureEvent } from "@/lib/analytics"
 import { normalizeCharacterId } from "@/lib/persistence"
 import { useModelStore } from "@/lib/model-store"
 import type { FileUIPart } from "@ai-sdk/ui-utils"
@@ -26,6 +27,7 @@ export function useChatActions({
     const handleInputSubmit = useCallback(
         (inputValue?: string, fileValues?: UploadedFile[]) => {
             if (status === "streaming") {
+                captureEvent("chat_generation_stopped")
                 stop()
                 return
             }
@@ -48,6 +50,7 @@ export function useChatActions({
             const characterId = normalizeCharacterId(
                 useModelStore.getState().selectedCharacterId
             )
+            const selectedModel = useModelStore.getState().selectedModel
 
             append({
                 id: nanoid(),
@@ -66,6 +69,14 @@ export function useChatActions({
                 createdAt: new Date(),
                 metadata: { characterId }
             } as unknown as Parameters<typeof append>[0])
+
+            captureEvent("chat_message_sent", {
+                has_files: finalFiles.length > 0,
+                character_id: characterId,
+                model_id: selectedModel ?? undefined,
+                thread_id: threadId,
+                folder_id: folderId
+            })
 
             setUploadedFiles([])
         },
@@ -87,6 +98,10 @@ export function useChatActions({
             setMessages(messagesUpToRetry)
             setTargetFromMessageId(undefined)
             setTargetMode("normal")
+            captureEvent("chat_retry_requested", {
+                message_id: message.id,
+                thread_id: threadId
+            })
             reload({
                 body: {
                     targetMode: "retry",
@@ -128,6 +143,10 @@ export function useChatActions({
             setMessages([...messagesUpToEdit, updatedEditedMessage])
             setTargetFromMessageId(undefined)
             setTargetMode("normal")
+            captureEvent("chat_edit_submitted", {
+                message_id: messageId,
+                thread_id: threadId
+            })
             reload({
                 body: {
                     targetMode: "edit",

@@ -6,6 +6,7 @@ import { useToken } from "@/hooks/auth-hooks"
 import { useAutoResume } from "@/hooks/use-auto-resume"
 import { browserEnv } from "@/lib/browser-env"
 import { useChatStore } from "@/lib/chat-store"
+import { captureEvent } from "@/lib/analytics"
 import { useModelStore } from "@/lib/model-store"
 import { type Message, useChat } from "@ai-sdk/react"
 import { useQuery as useConvexQuery } from "convex-helpers/react/cache"
@@ -108,10 +109,25 @@ export function useChatIntegration<IsShared extends boolean>({
         },
         initialMessages,
         onFinish: () => {
+            captureEvent("chat_response_completed", {
+                thread_id: threadId,
+                shared_thread_id: sharedThreadId,
+                is_shared: Boolean(isShared),
+                model_id: selectedModel
+            })
             if (!isShared && shouldUpdateQuery) {
                 setShouldUpdateQuery(false)
                 triggerRerender()
             }
+        },
+        onError: (error) => {
+            captureEvent("chat_response_failed", {
+                thread_id: threadId,
+                shared_thread_id: sharedThreadId,
+                is_shared: Boolean(isShared),
+                model_id: selectedModel,
+                message: error.message
+            })
         },
         api: isShared ? undefined : `${browserEnv("VITE_CONVEX_API_URL")}/chat`,
         generateId: () => {

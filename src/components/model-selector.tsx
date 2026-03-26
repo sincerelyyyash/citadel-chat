@@ -19,6 +19,7 @@ import { api } from "@/convex/_generated/api"
 import type { SharedModel } from "@/convex/lib/models"
 import { useSession } from "@/hooks/auth-hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { captureEvent } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 
 import { DefaultSettings } from "@/convex/settings"
@@ -105,6 +106,11 @@ const ModelItem = React.memo(function ModelItem({
         <CommandItem
             key={model.id}
             onSelect={() => {
+                if (model.id !== selectedModel) {
+                    captureEvent("chat_model_changed", {
+                        model_id: model.id
+                    })
+                }
                 onModelChange(model.id)
                 onClose()
             }}

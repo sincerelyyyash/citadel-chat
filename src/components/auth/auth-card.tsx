@@ -5,6 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useSession } from "@/hooks/auth-hooks"
+import { captureEvent } from "@/lib/analytics"
 import { authClient } from "@/lib/auth-client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
@@ -56,21 +57,29 @@ export function AuthCard() {
             if (error) {
                 toast.error(error.message ?? "Failed to update name")
             } else {
+                captureEvent("auth_onboarding_completed")
                 router.navigate({ to: "/" })
             }
         },
         onError: (error) => {
+            captureEvent("auth_onboarding_failed", {
+                message: error.message
+            })
             toast.error(error.message ?? "Failed to update name")
         }
     })
 
     const socialSignInMutation = useMutation({
         mutationFn: async (provider: "google" | "github") => {
+            captureEvent("auth_sign_in_started", { provider })
             return await authClient.signIn.social({
                 provider
             })
         },
         onError: (error) => {
+            captureEvent("auth_sign_in_failed", {
+                message: error.message
+            })
             toast.error(error.message ?? `Failed to sign in with ${error}`)
         }
     })

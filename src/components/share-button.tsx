@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
+import { captureEvent } from "@/lib/analytics"
 import { copyToClipboard } from "@/lib/utils"
 import { useAction } from "convex/react"
 import { Check, Copy, Share2 } from "lucide-react"
@@ -45,6 +46,9 @@ export function ShareButton({ threadId }: ShareButtonProps) {
 
             const url = `${window.location.origin}/s/${result.sharedThreadId}`
             setSharedUrl(url)
+            captureEvent("thread_share_link_created", {
+                thread_id: threadId
+            })
         } catch (error) {
             console.error("Error sharing thread:", error)
         } finally {
@@ -56,6 +60,9 @@ export function ShareButton({ threadId }: ShareButtonProps) {
         if (!sharedUrl) return
 
         await copyToClipboard(sharedUrl)
+        captureEvent("thread_share_link_copied", {
+            thread_id: threadId
+        })
         setCopied(true)
         setTimeout(() => setCopied(false), 2000)
     }

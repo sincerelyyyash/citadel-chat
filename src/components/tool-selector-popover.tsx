@@ -19,6 +19,7 @@ import { api } from "@/convex/_generated/api"
 import type { UserToggleableAbilityId } from "@/convex/lib/toolkit"
 import { useSession } from "@/hooks/auth-hooks"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { captureEvent } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 import { useConvexQuery } from "@convex-dev/react-query"
 import { Globe, Settings2 } from "lucide-react"
@@ -85,19 +86,29 @@ export const ToolSelectorPopover = memo(
         const handleWebSearchToggle = () => {
             if (!modelSupportsFunctionCalling) return
 
+            const enabled = !enabledTools.includes("web_search")
             onEnabledToolsChange(
-                enabledTools.includes("web_search")
-                    ? enabledTools.filter((tool) => tool !== "web_search")
-                    : [...enabledTools, "web_search"]
+                enabled
+                    ? [...enabledTools, "web_search"]
+                    : enabledTools.filter((tool) => tool !== "web_search")
             )
+            captureEvent("chat_tool_toggled", {
+                tool: "web_search",
+                enabled
+            })
         }
 
         const handleSupermemoryToggle = () => {
+            const enabled = !enabledTools.includes("supermemory")
             onEnabledToolsChange(
-                enabledTools.includes("supermemory")
-                    ? enabledTools.filter((tool) => tool !== "supermemory")
-                    : [...enabledTools, "supermemory"]
+                enabled
+                    ? [...enabledTools, "supermemory"]
+                    : enabledTools.filter((tool) => tool !== "supermemory")
             )
+            captureEvent("chat_tool_toggled", {
+                tool: "supermemory",
+                enabled
+            })
         }
 
         const getActiveToolsCount = () => {

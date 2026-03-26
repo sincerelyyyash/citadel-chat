@@ -1,4 +1,5 @@
 import { cn, copyToClipboard } from "@/lib/utils"
+import { captureEvent } from "@/lib/analytics"
 import type { UIMessage } from "ai"
 import { Check, Copy, Edit3, RotateCcw } from "lucide-react"
 import { memo, useMemo, useState } from "react"
@@ -49,6 +50,9 @@ export const ChatActions = memo(
                 .join("\n")
 
             await copyToClipboard(textContent)
+            captureEvent("chat_message_copied", {
+                role: message.role
+            })
             setCopied(true)
             setTimeout(() => setCopied(false), 1500)
         }
@@ -67,7 +71,12 @@ export const ChatActions = memo(
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 border bg-background/80 text-foreground shadow-sm backdrop-blur-sm hover:bg-accent hover:text-primary"
-                                onClick={() => onRetry(message)}
+                                onClick={() => {
+                                    captureEvent("chat_retry_clicked", {
+                                        role: message.role
+                                    })
+                                    onRetry(message)
+                                }}
                             >
                                 <RotateCcw className="h-3.5 w-3.5" />
                             </Button>
@@ -85,7 +94,12 @@ export const ChatActions = memo(
                                 variant="ghost"
                                 size="icon"
                                 className="h-7 w-7 border bg-background/80 text-foreground shadow-sm backdrop-blur-sm hover:bg-accent hover:text-primary"
-                                onClick={() => onEdit(message)}
+                                onClick={() => {
+                                    captureEvent("chat_edit_clicked", {
+                                        role: message.role
+                                    })
+                                    onEdit(message)
+                                }}
                             >
                                 <Edit3 className="h-3.5 w-3.5" />
                             </Button>

@@ -15,6 +15,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { CHARACTERS, type Character } from "@/lib/characters"
+import { captureEvent } from "@/lib/analytics"
 import { cn } from "@/lib/utils"
 import { ChevronDown, Sword } from "lucide-react"
 import { memo, useState } from "react"
@@ -79,6 +80,14 @@ export const CharacterPicker = ({
     const isMobile = useIsMobile()
 
     const selected = CHARACTERS.find((c) => c.id === selectedCharacterId)
+    const handleCharacterChange = (characterId: string) => {
+        if (characterId !== selectedCharacterId) {
+            captureEvent("chat_character_changed", {
+                character_id: characterId
+            })
+        }
+        onCharacterChange(characterId)
+    }
 
     return (
         <ResponsivePopover open={open} onOpenChange={setOpen}>
@@ -118,7 +127,7 @@ export const CharacterPicker = ({
                                         key={character.id}
                                         character={character}
                                         isSelected={selectedCharacterId === character.id}
-                                        onSelect={onCharacterChange}
+                                        onSelect={handleCharacterChange}
                                         onClose={() => setOpen(false)}
                                     />
                                 ))}
