@@ -46,12 +46,13 @@ type PromptInputProps = {
     isLoading?: boolean
     maxHeight?: number | string
     onSubmit?: () => void
+    disabled?: boolean
     children: React.ReactNode
     className?: string
 }
 
 const PromptInput = forwardRef<PromptInputRef, PromptInputProps>(
-    ({ className, isLoading = false, maxHeight = 240, onSubmit, children }, ref) => {
+    ({ className, isLoading = false, maxHeight = 240, onSubmit, disabled, children }, ref) => {
         const textareaRef = useRef<HTMLTextAreaElement>(null)
 
         useImperativeHandle(
@@ -83,6 +84,7 @@ const PromptInput = forwardRef<PromptInputRef, PromptInputProps>(
                         isLoading,
                         maxHeight,
                         onSubmit,
+                        disabled,
                         textareaRef
                     }}
                 >

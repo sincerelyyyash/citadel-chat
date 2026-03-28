@@ -21,10 +21,12 @@ import { useEffect, useRef, useState } from "react"
 
 export function MultimodalInput({
     onSubmit,
-    status
+    status,
+    disabled = false
 }: {
     onSubmit: (input?: string, files?: UploadedFile[]) => void
     status: ReturnType<typeof useChat>["status"]
+    disabled?: boolean
 }) {
     const location = useLocation()
     // Extract threadId from URL
@@ -76,6 +78,7 @@ export function MultimodalInput({
             promptInputRef.current?.focus()
             return
         }
+        if (disabled) return
 
         promptInputRef.current?.clear()
         localStorage.removeItem("user-input")
@@ -107,6 +110,8 @@ export function MultimodalInput({
     const handleVoiceButtonClick = () => {
         if (voiceState.isRecording) {
             stopRecording()
+        } else if (disabled) {
+            return
         } else if (isInputEmpty && !isLoading) {
             startRecording()
         } else {
@@ -155,6 +160,7 @@ export function MultimodalInput({
                 <PromptInput
                     ref={promptInputRef}
                     onSubmit={handleSubmit}
+                    disabled={disabled}
                     className={cn("mx-auto w-full", getChatWidthClass(chatWidthState.chatWidth))}
                 >
                     <PromptInputTextarea autoFocus placeholder="Ask about the realm..." />
@@ -189,7 +195,7 @@ export function MultimodalInput({
                                 variant="default"
                                 size="icon"
                                 className="size-8 shrink-0 rounded-md"
-                                disabled={status === "submitted"}
+                                disabled={status === "submitted" || disabled}
                                 onClick={handleVoiceButtonClick}
                                 type="submit"
                             >

@@ -1,3 +1,4 @@
+import { GuestSessionProvider } from "@/components/guest-session-provider"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
 import { authClient } from "@/lib/auth-client"
@@ -32,19 +33,21 @@ export function Providers({ children }: { children: ReactNode }) {
 
     const appProviders = (
         <AuthQueryProvider>
-            <ThemeProvider>
-                <AuthUIProviderTanstack
-                    authClient={authClient}
-                    navigate={(href) => router.navigate({ href })}
-                    replace={(href) => router.navigate({ href, replace: true })}
-                    Link={({ href, ...props }) => <Link to={href} {...props} />}
-                >
-                    <PostHogTracker />
-                    {children}
+            <GuestSessionProvider>
+                <ThemeProvider>
+                    <AuthUIProviderTanstack
+                        authClient={authClient}
+                        navigate={(href) => router.navigate({ href })}
+                        replace={(href) => router.navigate({ href, replace: true })}
+                        Link={({ href, ...props }) => <Link to={href} {...props} />}
+                    >
+                        <PostHogTracker />
+                        {children}
 
-                    <Toaster />
-                </AuthUIProviderTanstack>
-            </ThemeProvider>
+                        <Toaster />
+                    </AuthUIProviderTanstack>
+                </ThemeProvider>
+            </GuestSessionProvider>
         </AuthQueryProvider>
     )
 

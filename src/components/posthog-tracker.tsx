@@ -12,14 +12,21 @@ export function PostHogTracker() {
     useEffect(() => {
         if (!isAnalyticsEnabled()) return
 
-        const nextPath = `${location.pathname}${location.search}${location.hash}`
+        const searchValue =
+            typeof location.search === "string"
+                ? location.search
+                : Object.keys(location.search ?? {}).length > 0
+                  ? JSON.stringify(location.search)
+                  : ""
+        const hashValue = typeof location.hash === "string" ? location.hash : ""
+        const nextPath = `${location.pathname}${searchValue}${hashValue}`
         if (lastPathRef.current === nextPath) return
 
         lastPathRef.current = nextPath
         captureEvent("$pageview", {
             path: location.pathname,
-            search: location.search || undefined,
-            hash: location.hash || undefined
+            search: searchValue || undefined,
+            hash: hashValue || undefined
         })
     }, [location.hash, location.pathname, location.search])
 

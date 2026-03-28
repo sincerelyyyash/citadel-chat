@@ -1,5 +1,5 @@
+import { GuestTrialBanner } from "@/components/guest-trial-banner"
 import { Messages } from "@/components/messages"
-import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useSession } from "@/hooks/auth-hooks"
 import { useChatActions } from "@/hooks/use-chat-actions"
@@ -8,15 +8,13 @@ import { useChatIntegration } from "@/hooks/use-chat-integration"
 import { useDynamicTitle } from "@/hooks/use-dynamic-title"
 import { useThreadSync } from "@/hooks/use-thread-sync"
 import { type UploadedFile, useChatStore } from "@/lib/chat-store"
-import { useDiskCachedQuery } from "@/lib/convex-cached-query"
 import { useModelStore } from "@/lib/model-store"
-import { useThemeStore } from "@/lib/theme-store"
 import { AnimatePresence, motion } from "motion/react"
 import { useEffect, useMemo } from "react"
 import { useStickToBottom } from "use-stick-to-bottom"
+import { useGuestSessionContext } from "./guest-session-provider"
 import { HouseBrandMark } from "./house-brand-mark"
 import { MultimodalInput } from "./multimodal-input"
-import { SignupMessagePrompt } from "./signup-message-prompt"
 import { StickToBottomButton } from "./stick-to-bottom-button"
 
 interface ChatProps {
@@ -31,9 +29,8 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
         initial: "instant",
         resize: "instant"
     })
-    const { themeState } = useThemeStore()
-    const mode = themeState.currentMode
     const { data: session, isPending } = useSession()
+    const { guestSession, guestId, isGuest, refreshGuestSession } = useGuestSessionContext()
 
     useDynamicTitle({ threadId })
 
@@ -43,25 +40,19 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
         }
     }, [selectedModel, setSelectedModel])
 
-    const projects = useDiskCachedQuery(
-        api.folders.getUserProjects,
-        {
-            key: "projects",
-            default: []
-        },
-        session?.user?.id ? {} : "skip"
-    )
-    const project =
-        "error" in projects ? null : projects?.find((project) => project._id === folderId)
-
     const { status, data, messages, ...chatHelpers } = useChatIntegration({
         threadId,
-        folderId
+        folderId: session?.user?.id ? folderId : undefined,
+        guestId: guestId ?? undefined,
+        onGuestStateChange: () => {
+            void refreshGuestSession()
+        }
     })
 
     const { handleInputSubmit, handleRetry, handleEditAndRetry } = useChatActions({
         threadId,
-        folderId
+        folderId: session?.user?.id ? folderId : undefined,
+        guestId: guestId ?? undefined
     })
 
     useChatDataProcessor({ data, messages })
@@ -97,13 +88,7 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
         }
     }, [threadId])
 
-    if (!session?.user && !isPending) {
-        return (
-            <div className="relative flex h-[calc(100dvh-64px)] items-center justify-center">
-                <SignupMessagePrompt />
-            </div>
-        )
-    }
+    const showGuestBanner = isGuest && Boolean(guestSession)
 
     return (
         <div className="relative flex h-[calc(100dvh-64px)] flex-col">
@@ -149,8 +134,17 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
                             <MultimodalInput
                                 onSubmit={handleInputSubmitWithScroll}
                                 status={status}
+                                disabled={Boolean(guestSession?.isBlocked)}
                             />
                         </motion.div>
+                        {showGuestBanner && guestSession ? (
+                            <div className="mt-4 w-full">
+                                <GuestTrialBanner
+                                    remainingMessages={guestSession.remainingMessages}
+                                    isBlocked={guestSession.isBlocked}
+                                />
+                            </div>
+                        ) : null}
                     </motion.div>
                 ) : (
                     <motion.div
@@ -165,7 +159,17 @@ const ChatContent = ({ threadId: routeThreadId, folderId }: ChatProps) => {
                             isAtBottom={isAtBottom}
                             scrollToBottom={scrollToBottom}
                         />
-                        <MultimodalInput onSubmit={handleInputSubmitWithScroll} status={status} />
+                        {showGuestBanner && guestSession ? (
+                            <GuestTrialBanner
+                                remainingMessages={guestSession.remainingMessages}
+                                isBlocked={guestSession.isBlocked}
+                            />
+                        ) : null}
+                        <MultimodalInput
+                            onSubmit={handleInputSubmitWithScroll}
+                            status={status}
+                            disabled={Boolean(guestSession?.isBlocked)}
+                        />
                     </motion.div>
                 )}
             </AnimatePresence>

@@ -3,6 +3,8 @@ import { AIMessage } from "./message"
 
 export const Thread = v.object({
     authorId: v.string(),
+    ownerType: v.union(v.literal("user"), v.literal("guest")),
+    guestId: v.optional(v.string()),
     title: v.string(),
     createdAt: v.number(),
     updatedAt: v.number(),

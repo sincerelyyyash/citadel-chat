@@ -1,5 +1,6 @@
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
+import { getStoredGuestId } from "@/lib/guest-session"
 import { useQuery as useConvexQuery } from "convex/react"
 import { useEffect } from "react"
 
@@ -8,9 +9,10 @@ interface UseDynamicTitleProps {
 }
 
 export function useDynamicTitle({ threadId }: UseDynamicTitleProps) {
+    const guestId = getStoredGuestId() ?? undefined
     const thread = useConvexQuery(
         api.threads.getThread,
-        threadId ? { threadId: threadId as Id<"threads"> } : "skip"
+        threadId ? { threadId: threadId as Id<"threads">, guestId } : "skip"
     )
 
     useEffect(() => {

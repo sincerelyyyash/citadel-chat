@@ -28,6 +28,8 @@ export const createThreadOrInsertMessages = internalMutation({
     args: {
         threadId: v.optional(v.string()),
         authorId: v.string(),
+        ownerType: v.union(v.literal("user"), v.literal("guest")),
+        guestId: v.optional(v.string()),
         userMessage: v.optional(HTTPAIMessage),
         proposedNewAssistantId: v.string(),
         targetFromMessageId: v.optional(v.string()),
@@ -40,6 +42,8 @@ export const createThreadOrInsertMessages = internalMutation({
         {
             threadId,
             authorId,
+            ownerType,
+            guestId,
             userMessage,
             proposedNewAssistantId,
             targetFromMessageId,
@@ -73,6 +77,8 @@ export const createThreadOrInsertMessages = internalMutation({
 
             const newId = await ctx.db.insert("threads", {
                 authorId,
+                ownerType,
+                guestId,
                 title: "New Chat",
                 createdAt: Date.now(),
                 updatedAt: Date.now(),
@@ -105,6 +111,15 @@ export const createThreadOrInsertMessages = internalMutation({
         if (!thread) {
             console.error("[cvx][createThreadOrInsertMessages] Thread not found", threadId)
             return undefined
+        }
+
+        const ownsThread =
+            thread.ownerType === "user"
+                ? ownerType === "user" && thread.authorId === authorId
+                : ownerType === "guest" && thread.guestId === guestId
+
+        if (!ownsThread) {
+            return new ChatError("forbidden:chat")
         }
 
         // Handle edit mode - delete messages after the edited message
@@ -212,16 +227,18 @@ export const createThreadOrInsertMessages = internalMutation({
 
 // New query to fetch all messages for a thread (public)
 export const getThreadMessages = query({
-    args: { threadId: v.id("threads") },
-    handler: async ({ db, auth }, { threadId }) => {
-        const user = await getUserIdentity(auth, {
-            allowAnons: true
-        })
-
-        if ("error" in user) return { error: user.error }
-
+    args: { threadId: v.id("threads"), guestId: v.optional(v.string()) },
+    handler: async ({ db, auth }, { threadId, guestId }) => {
+        const identity = await auth.getUserIdentity()
         const thread = await db.get(threadId)
-        if (!thread || thread.authorId !== user.id) return { error: "Unauthorized" }
+        if (!thread) return { error: "Unauthorized" }
+
+        const canRead =
+            thread.ownerType === "user"
+                ? identity?.subject === thread.authorId
+                : Boolean(guestId && thread.guestId === guestId)
+
+        if (!canRead) return { error: "Unauthorized" }
 
         const messages = await db
             .query("messages")
@@ -359,16 +376,18 @@ export const getUserThreadsPaginated = query({
 
 // Public version of getThreadById
 export const getThread = query({
-    args: { threadId: v.id("threads") },
-    handler: async ({ db, auth }, { threadId }) => {
-        const user = await getUserIdentity(auth, {
-            allowAnons: true
-        })
-
-        if ("error" in user) return null
-
+    args: { threadId: v.id("threads"), guestId: v.optional(v.string()) },
+    handler: async ({ db, auth }, { threadId, guestId }) => {
+        const identity = await auth.getUserIdentity()
         const thread = await db.get(threadId)
-        if (!thread || thread.authorId !== user.id) return null
+        if (!thread) return null
+
+        const canRead =
+            thread.ownerType === "user"
+                ? identity?.subject === thread.authorId
+                : Boolean(guestId && thread.guestId === guestId)
+
+        if (!canRead) return null
 
         return thread
     }
@@ -466,6 +485,9 @@ export const shareThread = action({
         if (!thread || thread.authorId !== user.id) {
             return { error: "Unauthorized" }
         }
+        if (thread.ownerType !== "user") {
+            return { error: "Unauthorized" }
+        }
 
         // Get all messages for the thread
         const messages: Infer<typeof Message>[] = await ctx.runQuery(
@@ -515,6 +537,7 @@ export const forkSharedThread = mutation({
         // Create new thread for the user
         const newThreadId: Id<"threads"> = await ctx.db.insert("threads", {
             authorId: user.id,
+            ownerType: "user",
             title: sharedThread.title,
             createdAt: Date.now(),
             updatedAt: Date.now()
@@ -549,7 +572,8 @@ export const togglePinThread = mutation({
         if ("error" in user) return { error: user.error }
 
         const thread = await ctx.db.get(threadId)
-        if (!thread || thread.authorId !== user.id) return { error: "Unauthorized" }
+        if (!thread || thread.authorId !== user.id || thread.ownerType !== "user")
+            return { error: "Unauthorized" }
 
         await ctx.db.patch(threadId, {
             pinned: !thread.pinned
@@ -569,7 +593,8 @@ export const deleteThread = mutation({
         if ("error" in user) return { error: user.error }
 
         const thread = await ctx.db.get(threadId)
-        if (!thread || thread.authorId !== user.id) return { error: "Unauthorized" }
+        if (!thread || thread.authorId !== user.id || thread.ownerType !== "user")
+            return { error: "Unauthorized" }
 
         // Thread count will be automatically updated by aggregate triggers
 
@@ -591,7 +616,8 @@ export const renameThread = mutation({
         if ("error" in user) return { error: user.error }
 
         const thread = await ctx.db.get(threadId)
-        if (!thread || thread.authorId !== user.id) return { error: "Unauthorized" }
+        if (!thread || thread.authorId !== user.id || thread.ownerType !== "user")
+            return { error: "Unauthorized" }
 
         // Validate title is not empty and reasonable length
         const trimmedTitle = title.trim()

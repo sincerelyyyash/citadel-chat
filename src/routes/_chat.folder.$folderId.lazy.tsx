@@ -1,8 +1,9 @@
 import { FolderHero } from "@/components/folder-hero"
+import { GuestTrialBanner } from "@/components/guest-trial-banner"
 import { Messages } from "@/components/messages"
 import { MultimodalInput } from "@/components/multimodal-input"
-import { SignupMessagePrompt } from "@/components/signup-message-prompt"
 import { StickToBottomButton } from "@/components/stick-to-bottom-button"
+import { useGuestSessionContext } from "@/components/guest-session-provider"
 import { api } from "@/convex/_generated/api"
 import type { Id } from "@/convex/_generated/dataModel"
 import { useSession } from "@/hooks/auth-hooks"
@@ -15,7 +16,6 @@ import type { UploadedFile } from "@/lib/chat-store"
 import { getChatWidthClass, useChatWidthStore } from "@/lib/chat-width-store"
 import { useDiskCachedPaginatedQuery, useDiskCachedQuery } from "@/lib/convex-cached-query"
 import { useModelStore } from "@/lib/model-store"
-import { useThemeStore } from "@/lib/theme-store"
 import { cn } from "@/lib/utils"
 import { Link } from "@tanstack/react-router"
 import { useLocation } from "@tanstack/react-router"
@@ -37,9 +37,8 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
         initial: "instant",
         resize: "instant"
     })
-    const { themeState } = useThemeStore()
-    const mode = themeState.currentMode
-    const { data: session, isPending } = useSession()
+    const { data: session } = useSession()
+    const { guestSession, guestId, isGuest, refreshGuestSession } = useGuestSessionContext()
     const location = useLocation()
 
     useDynamicTitle({ threadId })
@@ -63,12 +62,17 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
 
     const { status, data, messages } = useChatIntegration({
         threadId,
-        folderId
+        folderId: session?.user?.id ? folderId : undefined,
+        guestId: guestId ?? undefined,
+        onGuestStateChange: () => {
+            void refreshGuestSession()
+        }
     })
 
     const { handleInputSubmit, handleRetry, handleEditAndRetry } = useChatActions({
         threadId,
-        folderId
+        folderId: session?.user?.id ? folderId : undefined,
+        guestId: guestId ?? undefined
     })
 
     useChatDataProcessor({ data, messages })
@@ -79,14 +83,6 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
     }
 
     const isEmpty = !threadId && messages.length === 0
-
-    if (!session?.user && !isPending) {
-        return (
-            <div className="relative flex h-[calc(100dvh-64px)] items-center justify-center">
-                <SignupMessagePrompt />
-            </div>
-        )
-    }
 
     // Recent threads component for FolderHero
     const RecentThreads = () => {
@@ -206,6 +202,7 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
     }
 
     const chatWidth = useChatWidthStore((state) => state.chatWidthState.chatWidth)
+    const showGuestBanner = isGuest && Boolean(guestSession)
 
     return (
         <div
@@ -254,8 +251,17 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
                                 <MultimodalInput
                                     onSubmit={handleInputSubmitWithScroll}
                                     status={status}
+                                    disabled={Boolean(guestSession?.isBlocked)}
                                 />
                             </motion.div>
+                            {showGuestBanner && guestSession ? (
+                                <div className="mt-4">
+                                    <GuestTrialBanner
+                                        remainingMessages={guestSession.remainingMessages}
+                                        isBlocked={guestSession.isBlocked}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
                         <div className={cn("w-full", getChatWidthClass(chatWidth), "px-4")}>
                             <RecentThreads />
@@ -274,7 +280,17 @@ const FolderChat = ({ folderId }: FolderChatProps) => {
                             isAtBottom={isAtBottom}
                             scrollToBottom={scrollToBottom}
                         />
-                        <MultimodalInput onSubmit={handleInputSubmitWithScroll} status={status} />
+                        {showGuestBanner && guestSession ? (
+                            <GuestTrialBanner
+                                remainingMessages={guestSession.remainingMessages}
+                                isBlocked={guestSession.isBlocked}
+                            />
+                        ) : null}
+                        <MultimodalInput
+                            onSubmit={handleInputSubmitWithScroll}
+                            status={status}
+                            disabled={Boolean(guestSession?.isBlocked)}
+                        />
                     </motion.div>
                 )}
             </AnimatePresence>

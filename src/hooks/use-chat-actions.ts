@@ -12,16 +12,19 @@ import { useChatIntegration } from "./use-chat-integration"
 
 export function useChatActions({
     threadId,
-    folderId
+    folderId,
+    guestId
 }: {
     threadId: string | undefined
     folderId?: Id<"projects">
+    guestId?: string
 }) {
     const { uploadedFiles, setUploadedFiles, setTargetFromMessageId, setTargetMode } =
         useChatStore()
     const { status, append, stop, messages, setMessages, reload } = useChatIntegration({
         threadId,
-        folderId
+        folderId,
+        guestId
     })
 
     const handleInputSubmit = useCallback(

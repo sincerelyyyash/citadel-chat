@@ -18,12 +18,16 @@ export function useChatIntegration<IsShared extends boolean>({
     threadId,
     sharedThreadId,
     isShared,
-    folderId
+    folderId,
+    guestId,
+    onGuestStateChange
 }: {
     threadId: string | undefined
     sharedThreadId?: string | undefined
     isShared?: IsShared
     folderId?: Id<"projects">
+    guestId?: string
+    onGuestStateChange?: () => void
 }) {
     const tokenData = useToken()
     const { selectedModel, selectedCharacterId, enabledTools, reasoningEffort } = useModelStore()
@@ -34,7 +38,7 @@ export function useChatIntegration<IsShared extends boolean>({
     // For regular threads, use getThreadMessages
     const threadMessages = useConvexQuery(
         api.threads.getThreadMessages,
-        !isShared && threadId ? { threadId: threadId as Id<"threads"> } : "skip"
+        !isShared && threadId ? { threadId: threadId as Id<"threads">, guestId } : "skip"
     )
 
     // For shared threads, get the shared thread data
@@ -47,7 +51,7 @@ export function useChatIntegration<IsShared extends boolean>({
 
     const thread = useConvexQuery(
         api.threads.getThread,
-        !isShared && threadId ? { threadId: threadId as Id<"threads"> } : "skip"
+        !isShared && threadId ? { threadId: threadId as Id<"threads">, guestId } : "skip"
     )
 
     const initialMessages = useMemo(() => {
@@ -74,9 +78,11 @@ export function useChatIntegration<IsShared extends boolean>({
               : threadId,
         headers: isShared
             ? {}
-            : {
-                  authorization: `Bearer ${tokenData.token}`
-              },
+            : tokenData.token
+              ? {
+                    authorization: `Bearer ${tokenData.token}`
+                }
+              : {},
         experimental_throttle: 50,
         experimental_prepareRequestBody(body) {
             // Skip request preparation for shared threads since they're read-only
@@ -104,11 +110,15 @@ export function useChatIntegration<IsShared extends boolean>({
                 },
                 enabledTools,
                 folderId,
+                guestId,
                 reasoningEffort
             }
         },
         initialMessages,
         onFinish: () => {
+            if (guestId) {
+                onGuestStateChange?.()
+            }
             captureEvent("chat_response_completed", {
                 thread_id: threadId,
                 shared_thread_id: sharedThreadId,
@@ -121,6 +131,9 @@ export function useChatIntegration<IsShared extends boolean>({
             }
         },
         onError: (error) => {
+            if (guestId) {
+                onGuestStateChange?.()
+            }
             captureEvent("chat_response_failed", {
                 thread_id: threadId,
                 shared_thread_id: sharedThreadId,
@@ -164,7 +177,7 @@ export function useChatIntegration<IsShared extends boolean>({
     ])
 
     useAutoResume({
-        autoResume: !isShared, // Skip auto resume for shared threads
+        autoResume: !isShared && Boolean(tokenData.token), // Guest sessions do not resume streams
         thread: thread || undefined,
         threadId,
         experimental_resume: customResume,

@@ -13,7 +13,7 @@ import { internal } from "../_generated/api"
 import type { Id } from "../_generated/dataModel"
 import { httpAction } from "../_generated/server"
 import { dbMessagesToCore } from "../lib/db_to_core_messages"
-import { getUserIdentity } from "../lib/identity"
+import { getGuestMessageLimit, getRemainingGuestMessages } from "../lib/guest_sessions"
 import { getResumableStreamContext } from "../lib/resumable_stream_context"
 import { getToolkit, normalizeClientEnabledTools } from "../lib/toolkit"
 import type { HTTPAIMessage } from "../schema/message"
@@ -37,28 +37,77 @@ export const chatPOST = httpAction(async (ctx, req) => {
         mcpOverrides?: Record<string, boolean>
         folderId?: Id<"projects">
         reasoningEffort?: ReasoningEffort
+        guestId?: string
     } = await req.json()
 
     if (body.targetFromMessageId && !body.id) {
         return new ChatError("bad_request:chat").toResponse()
     }
 
-    const user = await getUserIdentity(ctx.auth, { allowAnons: true })
-    if ("error" in user) return new ChatError("unauthorized:chat").toResponse()
+    const identity = await ctx.auth.getUserIdentity()
+    const guestId = typeof body.guestId === "string" ? body.guestId : undefined
+
+    const user = identity
+        ? { id: identity.subject, isGuest: false as const }
+        : guestId
+          ? { id: "", isGuest: true as const, guestId }
+          : null
+
+    if (!user) return new ChatError("unauthorized:chat").toResponse()
+
+    let guestSession:
+        | {
+              guestId: string
+              messageCount: number
+              status: "active" | "claimed" | "blocked"
+          }
+        | null = null
+
+    if (user.isGuest) {
+        guestSession = await ctx.runQuery(internal.guestSessions.getGuestSessionByGuestId, {
+            guestId: user.guestId
+        })
+
+        if (!guestSession) {
+            return new ChatError("unauthorized:chat").toResponse()
+        }
+
+        if (
+            guestSession.status !== "active" ||
+            guestSession.messageCount >= getGuestMessageLimit()
+        ) {
+            return Response.json(
+                {
+                    code: "guest_limit_reached",
+                    message: "Sign in to continue this conversation.",
+                    remainingMessages: getRemainingGuestMessages(guestSession.messageCount)
+                },
+                { status: 429 }
+            )
+        }
+    }
 
     const mutationResult = await ctx.runMutation(internal.threads.createThreadOrInsertMessages, {
         threadId: body.id as Id<"threads">,
         authorId: user.id,
+        ownerType: user.isGuest ? "guest" : "user",
+        guestId: user.isGuest ? user.guestId : undefined,
         userMessage: "message" in body ? body.message : undefined,
         proposedNewAssistantId: body.proposedNewAssistantId,
         targetFromMessageId: body.targetFromMessageId,
         targetMode: body.targetMode,
-        folderId: body.folderId,
+        folderId: user.isGuest ? undefined : body.folderId,
         characterId: body.characterId ?? "tyrion"
     })
 
     if (mutationResult instanceof ChatError) return mutationResult.toResponse()
     if (!mutationResult) return new ChatError("bad_request:chat").toResponse()
+
+    if (user.isGuest) {
+        await ctx.runMutation(internal.guestSessions.incrementGuestMessageCount, {
+            guestId: user.guestId
+        })
+    }
 
     const dbMessages = await ctx.runQuery(internal.messages.getMessagesByThreadId, {
         threadId: mutationResult.threadId

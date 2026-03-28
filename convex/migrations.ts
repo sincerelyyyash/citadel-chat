@@ -13,6 +13,21 @@ export const backfillUserThreadsAggregatesMigration = migrations.define({
     }
 })
 
+export const backfillThreadOwnerTypeMigration = migrations.define({
+    table: "threads",
+    migrateOne: async (ctx, doc) => {
+        if (doc.ownerType) return
+
+        await ctx.db.patch(doc._id, {
+            ownerType: doc.guestId ? "guest" : "user"
+        })
+    }
+})
+
 export const runAggregateBackfill = migrations.runner([
     internal.migrations.backfillUserThreadsAggregatesMigration
+])
+
+export const runThreadOwnerTypeBackfill = migrations.runner([
+    internal.migrations.backfillThreadOwnerTypeMigration
 ])

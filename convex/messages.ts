@@ -51,7 +51,7 @@ export const patchMessage = internalMutation({
         // Create usage event for analytics
         if (metadata?.modelId) {
             const thread = await db.get(threadId)
-            if (thread) {
+            if (thread && thread.ownerType === "user" && thread.authorId) {
                 await db.insert("usageEvents", {
                     userId: thread.authorId,
                     modelId: metadata.modelId,
