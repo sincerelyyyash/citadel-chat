@@ -1,8 +1,6 @@
 import { Button } from "@/components/ui/button"
-import { getHouseSigilAltText, getHouseSigilPath } from "@/lib/house-sigils"
 import { useThemeStore } from "@/lib/theme-store"
 import { HOUSE_THEMES } from "@/lib/theme-utils"
-import { cn } from "@/lib/utils"
 import { useNavigate } from "@tanstack/react-router"
 import { motion } from "motion/react"
 
@@ -17,8 +15,6 @@ export function GuestTrialBanner({
     const { themeState } = useThemeStore()
     const selectedHouseTheme =
         HOUSE_THEMES.find((theme) => theme.url === themeState.selectedThemeUrl) ?? HOUSE_THEMES[0]
-    const sigilPath = getHouseSigilPath(themeState.selectedThemeUrl)
-    const sigilAlt = getHouseSigilAltText(themeState.selectedThemeUrl)
 
     return (
         <motion.div
@@ -32,21 +28,6 @@ export function GuestTrialBanner({
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
                 <div className="relative flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:px-5">
-                    {sigilPath ? (
-                        <div
-                            className={cn(
-                                "hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-background/35 sm:flex",
-                                isBlocked ? "shadow-[0_0_0_1px_hsl(var(--primary)/0.12)]" : ""
-                            )}
-                        >
-                            <img
-                                src={sigilPath}
-                                alt={sigilAlt}
-                                className="h-8 w-8 object-contain opacity-90"
-                            />
-                        </div>
-                    ) : null}
-
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             <p className="font-serif text-base text-foreground tracking-wide">
