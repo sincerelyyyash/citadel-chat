@@ -1,5 +1,5 @@
-import { HouseBrandMark } from "@/components/house-brand-mark"
 import { Button } from "@/components/ui/button"
+import { getHouseSigilAltText, getHouseSigilPath } from "@/lib/house-sigils"
 import { useThemeStore } from "@/lib/theme-store"
 import { HOUSE_THEMES } from "@/lib/theme-utils"
 import { cn } from "@/lib/utils"
@@ -17,32 +17,42 @@ export function GuestTrialBanner({
     const { themeState } = useThemeStore()
     const selectedHouseTheme =
         HOUSE_THEMES.find((theme) => theme.url === themeState.selectedThemeUrl) ?? HOUSE_THEMES[0]
+    const sigilPath = getHouseSigilPath(themeState.selectedThemeUrl)
+    const sigilAlt = getHouseSigilAltText(themeState.selectedThemeUrl)
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className="mx-auto w-full max-w-4xl px-4"
+            className="mx-auto w-full max-w-4xl"
         >
             <div className="relative overflow-hidden rounded-xl border border-border/70 bg-card/75 shadow-sm backdrop-blur-md">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.18),transparent_38%),radial-gradient(circle_at_bottom_right,hsl(var(--accent)/0.12),transparent_34%)]" />
                 <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-                <div className="relative flex items-center gap-4 px-4 py-3 md:px-5">
-                    <HouseBrandMark
-                        className="hidden md:flex"
-                        iconClassName={cn(
-                            "relative z-0 flex min-h-14 min-w-14 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/35",
-                            isBlocked ? "shadow-[0_0_0_1px_hsl(var(--primary)/0.12)]" : ""
-                        )}
-                        imageClassName="max-h-10 max-w-10 object-contain opacity-90"
-                    />
+                <div className="relative flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:px-5">
+                    {sigilPath ? (
+                        <div
+                            className={cn(
+                                "hidden h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-background/35 sm:flex",
+                                isBlocked ? "shadow-[0_0_0_1px_hsl(var(--primary)/0.12)]" : ""
+                            )}
+                        >
+                            <img
+                                src={sigilPath}
+                                alt={sigilAlt}
+                                className="h-8 w-8 object-contain opacity-90"
+                            />
+                        </div>
+                    ) : null}
 
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             <p className="font-serif text-base text-foreground tracking-wide">
-                                {isBlocked ? "The gate now asks your name" : "A guest audience remains"}
+                                {isBlocked
+                                    ? "The gate now asks your name"
+                                    : "A guest audience remains"}
                             </p>
                             <span className="text-muted-foreground text-xs italic tracking-wide">
                                 {selectedHouseTheme.motto}
@@ -58,7 +68,7 @@ export function GuestTrialBanner({
 
                     <Button
                         size="sm"
-                        className="shrink-0"
+                        className="w-full shrink-0 sm:w-auto"
                         onClick={() =>
                             navigate({ to: "/auth/$pathname", params: { pathname: "signup" } })
                         }
